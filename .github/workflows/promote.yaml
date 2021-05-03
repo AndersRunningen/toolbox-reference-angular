@@ -1,60 +1,60 @@
-name: promote
+# name: promote
 
-on:
-  workflow_dispatch:
-    inputs:
-      env:
-        description: 'Environment'
-        required: true
-        default: 'test'
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       env:
+#         description: 'Environment'
+#         required: true
+#         default: 'test'
 
-jobs:
-  dockerTag:
-    runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: github-evry-bergen/toolbox-reference-angular
-    steps:
-      -
-        name: Get commit sha
-        shell: bash
-        run: echo "SHORT_SHA=$(echo -n ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
-      -
-        name: Get branch name (merge)
-        if: github.event_name != 'pull_request'
-        shell: bash
-        run: echo "BRANCH_NAME=$(echo -n ${GITHUB_REF#refs/heads/} | tr -c '[:alnum:]' '-')" >> $GITHUB_ENV
-      -
-        name: Get branch name (pull request)
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: echo "BRANCH_NAME=$(echo -n ${GITHUB_HEAD_REF} | tr -c '[:alnum:]' '-')" >> $GITHUB_ENV
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ secrets.MAZE_ACR_REGISTRY }}
-          username: ${{ secrets.MAZE_ACR_USERNAME }}
-          password: ${{ secrets.MAZE_ACR_PASSWORD }}
-      -
-        name: Tag and push
-        id: docker_tag
-        shell: bash
-        run: |
-          echo "Pulling existing image..."
-          docker pull \
-            ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
+# jobs:
+#   dockerTag:
+#     runs-on: ubuntu-latest
+#     env:
+#       IMAGE_NAME: github-evry-bergen/toolbox-reference-angular
+#     steps:
+#       -
+#         name: Get commit sha
+#         shell: bash
+#         run: echo "SHORT_SHA=$(echo -n ${GITHUB_SHA} | cut -c1-8)" >> $GITHUB_ENV
+#       -
+#         name: Get branch name (merge)
+#         if: github.event_name != 'pull_request'
+#         shell: bash
+#         run: echo "BRANCH_NAME=$(echo -n ${GITHUB_REF#refs/heads/} | tr -c '[:alnum:]' '-')" >> $GITHUB_ENV
+#       -
+#         name: Get branch name (pull request)
+#         if: github.event_name == 'pull_request'
+#         shell: bash
+#         run: echo "BRANCH_NAME=$(echo -n ${GITHUB_HEAD_REF} | tr -c '[:alnum:]' '-')" >> $GITHUB_ENV
+#       -
+#         name: Set up QEMU
+#         uses: docker/setup-qemu-action@v1
+#       -
+#         name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v1
+#       -
+#         name: Login to Container Registry
+#         uses: docker/login-action@v1
+#         with:
+#           registry: ${{ secrets.MAZE_ACR_REGISTRY }}
+#           username: ${{ secrets.MAZE_ACR_USERNAME }}
+#           password: ${{ secrets.MAZE_ACR_PASSWORD }}
+#       -
+#         name: Tag and push
+#         id: docker_tag
+#         shell: bash
+#         run: |
+#           echo "Pulling existing image..."
+#           docker pull \
+#             ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
 
-          echo "Creating new tag..."
-          docker tag \
-            ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }} \
-            ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.env }}-${{ env.SHORT_SHA }}
+#           echo "Creating new tag..."
+#           docker tag \
+#             ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }} \
+#             ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.env }}-${{ env.SHORT_SHA }}
 
-          echo "Pushing new tag..."
-          docker push \
-            ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.env }}-${{ env.SHORT_SHA }}
+#           echo "Pushing new tag..."
+#           docker push \
+#             ${{ secrets.MAZE_ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.env }}-${{ env.SHORT_SHA }}
